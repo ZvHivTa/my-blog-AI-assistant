@@ -42,27 +42,24 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
-          # ⚠️ 核心脚本：设置环境变量 -> 杀进程 -> 启动新进程
+          # 核心脚本：设置环境变量 -> 杀进程 -> 启动新进程
           script: |
-            # 1. 创建日志目录 (如果不存在)
+            # 1. 创建日志目录
             mkdir -p /home/ubuntu/blog-backend
             
-            # 2. 停止旧服务
-            # 使用 || true 是为了防止第一次部署时没有进程可杀导致脚本报错停止
+            # 2. 停止旧服务 (修复版：只杀 java 进程，防止自杀)
             echo "Stopping current application..."
-            pkill -f 'blog_supporter' || true
+            pkill -f 'java.*blog_supporter' || true
             
-            # 3. 等待几秒确保端口释放
+            # 3. 等待释放
             sleep 2
             
             # 4. 启动新服务
             echo "Starting new application..."
-            # ⚠️ 关键：在这里注入 Secrets 为环境变量
-            # 这样你的 application.yml 里的 ${DB_PASSWORD} 才能读到值
             export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
             export GOOGLE_API_KEY="${{ secrets.GOOGLE_API_KEY }}"
             
-            # 后台启动，并将日志输出到 app.log
+            # 这里的 java 必须确保服务器上已经安装了！
             nohup java -jar /home/ubuntu/blog-backend/blog_supporter-0.0.1-SNAPSHOT.jar \
               > /home/ubuntu/blog-backend/app.log 2>&1 &
             
