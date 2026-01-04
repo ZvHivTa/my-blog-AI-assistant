@@ -47,11 +47,12 @@ jobs:
             # 1. 创建日志目录
             mkdir -p /home/ubuntu/blog-backend
             
-            # 2. 停止旧服务 (修复版：只杀 java 进程，防止自杀)
+            # 2. 停止旧服务 (精准查杀版)
             echo "Stopping current application..."
-            pkill -f 'java.*blog_supporter' || true
+            # 逻辑：找所有带 blog_supporter 的进程 -> 找 java -> 排除 grep -> 排除 bash (防止自杀) -> 杀掉
+            ps -ef | grep "blog_supporter" | grep "java" | grep -v "grep" | grep -v "bash" | awk '{print $2}' | xargs -r kill -9
             
-            # 3. 等待释放
+            # 3. 等待端口释放
             sleep 2
             
             # 4. 启动新服务
@@ -59,7 +60,6 @@ jobs:
             export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
             export GOOGLE_API_KEY="${{ secrets.GOOGLE_API_KEY }}"
             
-            # 这里的 java 必须确保服务器上已经安装了！
             nohup java -jar /home/ubuntu/blog-backend/blog_supporter-0.0.1-SNAPSHOT.jar \
               > /home/ubuntu/blog-backend/app.log 2>&1 &
             
