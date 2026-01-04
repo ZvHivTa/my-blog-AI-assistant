@@ -5,20 +5,16 @@ spring:
   datasource:
     url: jdbc:postgresql://ep-floral-field-a4mm3qqk-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channelBinding=require
     username: neondb_owner
-    password: npg_moNKV4zSB9Ab # 你的密码
+    # 🔒 修改点 1: 替换为环境变量
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   ai:
-    # 这里的配置主要给上面的 Java 代码读取用
     openai:
-      api-key: AIzaSyCW5cox6-nNN766P6-wIN850oSjDew99Bc # 你的 Google API Key
+      # 🔒 修改点 2: 替换为环境变量
+      api-key: ${GOOGLE_API_KEY}
 
-      # 下面这些都不需要了，因为我们用了官方 SDK
-      # base-url: ... (删除)
-      # chat: ... (删除)
-      # embedding: enabled: false (删除)
-
-    # ⚠️ 必须保留：本地向量模型配置
+    # 本地向量模型 (这个不需要脱敏，保留即可)
     transformers:
       embedding:
         enabled: true
