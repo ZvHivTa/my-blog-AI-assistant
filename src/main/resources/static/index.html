@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>我的科研助手</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+<h1>科研文献知识库</h1>
+
+<div style="border: 1px solid #ccc; padding: 20px; margin-bottom: 20px;">
+    <h3>1. 上传论文</h3>
+    <input type="file" id="fileInput">
+    <button onclick="uploadFile()">上传并学习</button>
+    <p id="uploadStatus" style="color: blue;"></p>
+</div>
+
+<div style="border: 1px solid #ccc; padding: 20px;">
+    <h3>2. 向 AI 提问</h3>
+    <input type="text" id="questionInput" placeholder="输入关于论文的问题..." style="width: 300px;">
+    <button onclick="askAI()">提问</button>
+    <div id="answerArea" style="margin-top: 10px; background: #f0f0f0; padding: 10px; min-height: 50px;"></div>
+</div>
+
+<script>
+    // 上传逻辑
+    async function uploadFile() {
+        const file = document.getElementById('fileInput').files[0];
+        if (!file) return alert("请先选择文件");
+
+        const formData = new FormData();
+        formData.append("file", file);
+        document.getElementById('uploadStatus').innerText = "正在解析并向量化，请稍候...";
+
+        try {
+            const res = await fetch('/api/research/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const text = await res.text();
+            document.getElementById('uploadStatus').innerText = text;
+        } catch (e) {
+            document.getElementById('uploadStatus').innerText = "上传失败：" + e;
+        }
+    }
+
+    // 提问逻辑
+    async function askAI() {
+        const question = document.getElementById('questionInput').value;
+        const answerArea = document.getElementById('answerArea');
+        answerArea.innerText = "思考中...";
+
+        try {
+            const res = await fetch(`/api/research/chat?question=${encodeURIComponent(question)}`);
+            const text = await res.text();
+            answerArea.innerText = text;
+        } catch (e) {
+            answerArea.innerText = "出错啦：" + e;
+        }
+    }
+</script>
+</body>
+</html>

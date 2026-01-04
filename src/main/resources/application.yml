@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: blog-supporter
+
+  datasource:
+    url: jdbc:postgresql://ep-floral-field-a4mm3qqk-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channelBinding=require
+    username: neondb_owner
+    password: npg_moNKV4zSB9Ab # 你的密码
+    driver-class-name: org.postgresql.Driver
+
+  ai:
+    # 这里的配置主要给上面的 Java 代码读取用
+    openai:
+      api-key: AIzaSyCW5cox6-nNN766P6-wIN850oSjDew99Bc # 你的 Google API Key
+
+      # 下面这些都不需要了，因为我们用了官方 SDK
+      # base-url: ... (删除)
+      # chat: ... (删除)
+      # embedding: enabled: false (删除)
+
+    # ⚠️ 必须保留：本地向量模型配置
+    transformers:
+      embedding:
+        enabled: true
+
+    vectorstore:
+      pgvector:
+        dimension: 384
+        index-type: HNSW
+        initialize-schema: true
+
+server:
+  tomcat:
+    max-swallow-size: 100MB
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
