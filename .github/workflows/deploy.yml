@@ -1,0 +1,69 @@
+name: Deploy Backend to VPS
+
+on:
+  push:
+    branches: [ "main" ] # 监听 main 分支的更新
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 拉取最新代码
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. 设置 Java 21 环境 (与你本地一致)
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven # 开启缓存，让构建更快
+
+      # 3. Maven 打包 (跳过测试以节省时间)
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      # 4. 上传 Jar 包到服务器 (使用 ubuntu 用户目录，避免权限问题)
+      - name: Copy Jar to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          source: "target/blog_supporter-0.0.1-SNAPSHOT.jar"
+          target: "/home/ubuntu/blog-backend/"
+          strip_components: 1 # 去掉 target/ 这一层文件夹，直接把 jar 放在目标目录下
+
+      # 5. 远程连接服务器并重启服务
+      - name: Restart Application via SSH
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          # ⚠️ 核心脚本：设置环境变量 -> 杀进程 -> 启动新进程
+          script: |
+            # 1. 创建日志目录 (如果不存在)
+            mkdir -p /home/ubuntu/blog-backend
+            
+            # 2. 停止旧服务
+            # 使用 || true 是为了防止第一次部署时没有进程可杀导致脚本报错停止
+            echo "Stopping current application..."
+            pkill -f 'blog_supporter' || true
+            
+            # 3. 等待几秒确保端口释放
+            sleep 2
+            
+            # 4. 启动新服务
+            echo "Starting new application..."
+            # ⚠️ 关键：在这里注入 Secrets 为环境变量
+            # 这样你的 application.yml 里的 ${DB_PASSWORD} 才能读到值
+            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+            export GOOGLE_API_KEY="${{ secrets.GOOGLE_API_KEY }}"
+            
+            # 后台启动，并将日志输出到 app.log
+            nohup java -jar /home/ubuntu/blog-backend/blog_supporter-0.0.1-SNAPSHOT.jar \
+              > /home/ubuntu/blog-backend/app.log 2>&1 &
+            
+            echo "🚀 Deployment Successful! Backend is running in background."
