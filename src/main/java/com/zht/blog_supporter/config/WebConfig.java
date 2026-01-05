@@ -10,7 +10,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // 允许所有接口
-                .allowedOrigins("http://localhost:1234") // ⚠️ 允许你的 Astro 前端地址
+                .allowedOrigins("http://localhost:1234" //前端调试
+                ,"https://zvhivta.vercel.app" //博客地址
+                ) // 允许你的 Astro 前端地址
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
