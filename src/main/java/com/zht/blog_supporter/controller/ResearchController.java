@@ -66,7 +66,7 @@ public class ResearchController {
         // ⚠️ 把下面的域名换成你刚才在 Cloudflare 申请到的！
         String cfWorkerUrl = "https://broken-night-61cf.zvhivta.workers.dev";
 
-        String url = cfWorkerUrl + "/v1beta/models/gemini-flash-latest:generateContent?key=" + googleApiKey.trim();
+        String url = cfWorkerUrl + "/v1beta/models/gemini-2.0-flash-lite-001:generateContent?key=" + googleApiKey.trim();
 
         Map<String, Object> requestBody = Map.of(
                 "contents", List.of(
